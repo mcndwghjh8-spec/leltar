@@ -83,14 +83,6 @@
   <header>
     <h1>Leltárkezelő Rendszer</h1>
   </header>
-<!-- 🔹 Bejelentkezés / Regisztráció -->
-<div id="authSection">
-    <h2>Bejelentkezés</h2>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Jelszó">
-    <button onclick="login()">Bejelentkezés</button>
-    <p id="authMsg"></p>
-</div>
   <main>
     <!-- Tab váltás: Leltár / Előzmények -->
     <div class="tab-buttons">
@@ -131,23 +123,7 @@
     const db = firebase.firestore();
     const auth = firebase.auth();
     const inventoryRef = db.collection("leltar");
-    const allowedEmails = [
-    "dohnyaalex@gmail.com",
-    "user2@example.com",
-    "user3@example.com"
-];
-    // 🔹 Bejelentkezés
-function login(){
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    if(!allowedEmails.includes(email)){
-        document.getElementById("authMsg").innerText="Ez az e-mail cím nincs engedélyezve.";
-        return;
-    }
-    auth.signInWithEmailAndPassword(email,password).catch(e=>{
-        document.getElementById("authMsg").innerText=e.message;
-    });
-}
+  
 
 // 🔹 Auth state
 auth.onAuthStateChanged(user=>{
