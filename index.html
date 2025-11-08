@@ -1,246 +1,245 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-<meta charset="UTF-8">
-<title>Leltár Pultok</title>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<style>
-body{font-family:Arial;margin:20px;}
-h1{color:#333;}
-ul{list-style:none;padding:0;}
-li{margin:5px 0;}
-button{padding:5px 10px;margin-left:5px;}
-#authMsg{color:red;}
-#tabs button{margin-right:5px;}
-#tabs{margin-bottom:10px;}
-table{border-collapse:collapse;width:100%;margin-top:10px;}
-td,th{border:1px solid #ccc;padding:8px;text-align:left;}
-</style>
+  <meta charset="UTF-8">
+  <title>Leltárkezelő</title>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #1976d2;
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+    main {
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    select {
+      font-size: 16px;
+      padding: 5px;
+      margin-bottom: 20px;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      background: white;
+      margin: 6px 0;
+      padding: 10px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .buttons button {
+      margin-left: 5px;
+      padding: 5px 10px;
+      border: none;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .add { background-color: #43a047; }
+    .remove { background-color: #e53935; }
+    .tab-buttons {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    .tab-buttons button {
+      border: none;
+      background: #e0e0e0;
+      padding: 10px 20px;
+      margin: 0 5px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    .tab-buttons button.active {
+      background: #1976d2;
+      color: white;
+    }
+    #historyList li {
+      font-size: 14px;
+      padding: 6px 10px;
+    }
+  </style>
 </head>
 <body>
-<h1>Leltár Kezelő</h1>
 
-<!-- 🔹 Bejelentkezés / Regisztráció -->
-<div id="authSection">
-    <h2>Bejelentkezés</h2>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Jelszó">
-    <button onclick="login()">Bejelentkezés</button>
-    <p id="authMsg"></p>
-</div>
+  <header>
+    <h1>Leltárkezelő Rendszer</h1>
+  </header>
 
-<!-- 🔹 Inventory Section -->
-<div id="inventorySection" style="display:none;">
-    <div id="tabs">
-        <button onclick="showTab('inventory')">Leltár</button>
-        <button onclick="showTab('history')">Előzmények</button>
+  <main>
+    <!-- Tab váltás: Leltár / Előzmények -->
+    <div class="tab-buttons">
+      <button id="inventoryTab" class="active" onclick="showTab('inventory')">📦 Leltár</button>
+      <button id="historyTab" onclick="showTab('history')">🕒 Előzmények</button>
     </div>
 
     <!-- Leltár fül -->
-    <div id="inventoryTab">
-        <label for="locationSelect">Válassz pultot:</label>
-        <select id="locationSelect" onchange="loadInventory()">
-            <option value="Emelet">Emelet</option>
-            <option value="1. pult">1. pult</option>
-        </select>
-        <ul id="inventoryList"></ul>
+    <div id="inventoryDiv">
+      <label for="locationSelect">Válassz pultot:</label>
+      <select id="locationSelect" onchange="loadInventory()">
+        <option value="Emelet">Emelet</option>
+        <option value="1.pult">1.pult</option>
+      </select>
+      <ul id="inventoryList"></ul>
     </div>
 
     <!-- Előzmények fül -->
-    <div id="historyTab" style="display:none;">
-        <table id="historyTable">
-            <thead>
-                <tr><th>Időpont</th><th>Felhasználó</th><th>Termék</th><th>Pult</th><th>Változás</th></tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+    <div id="historyDiv" style="display:none;">
+      <h3>Előzmények (utolsó 24 óra)</h3>
+      <ul id="historyList"></ul>
     </div>
-</div>
+  </main>
 
-<script>
-// 🔹 Firebase konfiguráció (cseréld a saját adataidra)
-const firebaseConfig = {
-    apiKey: "AIzaSyDaDtikwgOeEx1YKjbaW7p-TS531gPysbo",
-    authDomain: "madach-49324.firebaseapp.com",
-    projectId: "madach-49324",
-    storageBucket: "madach-49324.firebasestorage.app",
-    messagingSenderId: "1078568548865",
-    appId: "1:1078568548865:web:863cbf2dffc162a75b5e00",
-    measurementId: "G-X6R9VX2YFJ"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+  <script>
+    // 🔥 Firebase konfiguráció — IDE MÁSOLD A SAJÁTODAT
+    const firebaseConfig = {
+      apiKey: "AIzaSyDaDtikwgOeEx1YKjbaW7p-TS531gPysbo",
+      authDomain: "madach-49324.firebaseapp.com",
+      projectId: "madach-49324",
+      storageBucket: "madach-49324.firebasestorage.app",
+      messagingSenderId: "1078568548865",
+      appId: "1:1078568548865:web:863cbf2dffc162a75b5e00"
+    };
 
-// 🔹 Engedélyezett e-mailek
-const allowedEmails = [
-    "dohnyaalex@gmail.com",
-    "user2@example.com",
-    "user3@example.com"
-];
+    // Firebase inicializálása
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const inventoryRef = db.collection("inventory");
 
-// 🔹 Alapértelmezett termékek
-const defaultProducts = [
-    {name:"Mentes Víz",qty:120},
-    {name:"Savás Víz",qty:100},
-    {name:"Cola",qty:50},
-    {name:"Cola Zero",qty:32},
-    {name:"Fanta",qty:23},
-    {name:"Sprite",qty:32},
-    {name:"Gyömbér",qty:43},
-    {name:"Tonik",qty:34},
-    {name:"Alma",qty:54},
-    {name:"Barack",qty:45},
-    {name:"Narancs",qty:65},
-    {name:"Grapefruit",qty:56},
-    {name:"Ananász",qty:76},
-    {name:"Citromos Tea",qty:56},
-    {name:"Barackos Tea",qty:89},
-    {name:"Hungária 0,2",qty:7},
-    {name:"Rosé Hungária 0,2",qty:4},
-    {name:"Édes Törley 0,2",qty:5},
-    {name:"Alkoholmentes Törley 0,2",qty:4},
-    {name:"Prosecco 0,2",qty:3},
-    {name:"Hungária",qty:4},
-    {name:"Száraz Törley",qty:4},
-    {name:"Édes Törley",qty:5},
-    {name:"Nyakas Irsai",qty:5},
-    {name:"Nyakas Chardonnay",qty:3},
-    {name:"F. Gere",qty:2},
-    {name:"R. Gere",qty:2},
-    {name:"V. Gere",qty:1},
-    {name:"Günzer",qty:1},
-    {name:"Thummerer",qty:2}
-];
-
-// 🔹 UI váltás fülek
-function showTab(tab){
-    document.getElementById('inventoryTab').style.display = tab==='inventory'?'block':'none';
-    document.getElementById('historyTab').style.display = tab==='history'?'block':'none';
-}
-
-// 🔹 Regisztráció
-function signup(){
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    if(!allowedEmails.includes(email)){
-        document.getElementById("authMsg").innerText="Ez az e-mail cím nincs engedélyezve.";
-        return;
+    // 🔹 Fül váltás
+    function showTab(tab) {
+      document.getElementById("inventoryDiv").style.display = (tab === "inventory") ? "block" : "none";
+      document.getElementById("historyDiv").style.display = (tab === "history") ? "block" : "none";
+      document.getElementById("inventoryTab").classList.toggle("active", tab === "inventory");
+      document.getElementById("historyTab").classList.toggle("active", tab === "history");
+      if (tab === "history") loadHistory();
     }
-    auth.createUserWithEmailAndPassword(email,password).catch(e=>{
-        document.getElementById("authMsg").innerText=e.message;
-    });
-}
 
-// 🔹 Bejelentkezés
-function login(){
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    if(!allowedEmails.includes(email)){
-        document.getElementById("authMsg").innerText="Ez az e-mail cím nincs engedélyezve.";
-        return;
+    // 🔹 Leltár betöltése
+    async function loadInventory() {
+      const location = document.getElementById("locationSelect").value;
+      const list = document.getElementById("inventoryList");
+      list.innerHTML = "<li>Töltés...</li>";
+
+      try {
+        const snapshot = await inventoryRef.where("location", "==", location).get();
+        list.innerHTML = "";
+
+        if (snapshot.empty) {
+          list.innerHTML = "<li>Nincs adat ehhez a pulthoz.</li>";
+          return;
+        }
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <span><b>${data.name}</b> — ${data.quantity} db</span>
+            <div class="buttons">
+              <button class="add" onclick="changeQuantity('${doc.id}', true)">+</button>
+              <button class="remove" onclick="changeQuantity('${doc.id}', false)">−</button>
+            </div>
+          `;
+          list.appendChild(li);
+        });
+      } catch (error) {
+        list.innerHTML = "<li>Hiba történt az adatok betöltésekor.</li>";
+        console.error(error);
+      }
     }
-    auth.signInWithEmailAndPassword(email,password).catch(e=>{
-        document.getElementById("authMsg").innerText=e.message;
-    });
-}
 
-// 🔹 Auth state
-auth.onAuthStateChanged(user=>{
-    if(user){
-        document.getElementById("authSection").style.display="none";
-        document.getElementById("inventorySection").style.display="block";
-        initInventory();
-    }else{
-        document.getElementById("authSection").style.display="block";
-        document.getElementById("inventorySection").style.display="none";
+    // 🔹 Mennyiség módosítása
+    async function changeQuantity(docId, add) {
+      const docRef = inventoryRef.doc(docId);
+      const docSnap = await docRef.get();
+
+      if (!docSnap.exists) return alert("A termék nem található!");
+
+      let qty = parseInt(prompt("Mennyit " + (add ? "adsz hozzá" : "vonsz le") + "?"));
+      if (isNaN(qty) || qty <= 0) return alert("Érvénytelen mennyiség!");
+
+      const delta = add ? qty : -qty;
+      const user = "Ismeretlen"; // később ide jöhet majd bejelentkezett user
+      const timestamp = Date.now();
+
+      try {
+        await docRef.update({
+          quantity: firebase.firestore.FieldValue.increment(delta),
+          history: firebase.firestore.FieldValue.arrayUnion({
+            user: user,
+            change: delta,
+            timestamp: timestamp
+          })
+        });
+        loadInventory();
+      } catch (error) {
+        alert("Hiba történt a frissítés során!");
+        console.error(error);
+      }
     }
-});
 
-// 🔹 Inicializálás
-async function initInventory(){
-    const snap = await db.collection('inventory').get();
-    if(snap.empty){
-        // Feltöltés alapértelmezett termékekkel mindkét pultba
-        defaultProducts.forEach(p=>{
-            ['Emelet','1. pult'].forEach(pult=>{
-                db.collection('inventory').add({
-                    name: p.name,
-                    qty: p.qty,
-                    location: pult
-                });
+    // 🔹 Előzmények betöltése
+    async function loadHistory() {
+      const location = document.getElementById("locationSelect").value;
+      const list = document.getElementById("historyList");
+      list.innerHTML = "<li>Töltés...</li>";
+
+      try {
+        const now = Date.now();
+        const snapshot = await inventoryRef.where("location", "==", location).get();
+        list.innerHTML = "";
+
+        let historyItems = [];
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.history) {
+            data.history.forEach(h => {
+              if (now - h.timestamp <= 24 * 60 * 60 * 1000) {
+                const time = new Date(h.timestamp);
+                const timeStr = time.toLocaleTimeString("hu-HU", { hour: "2-digit", minute: "2-digit" });
+                historyItems.push(`${timeStr} — ${h.user} ${h.change > 0 ? "+" : ""}${h.change} → ${data.name}`);
+              }
             });
+          }
         });
+
+        if (historyItems.length === 0) {
+          list.innerHTML = "<li>Nincs frissítés az elmúlt 24 órában.</li>";
+        } else {
+          historyItems.sort().reverse();
+          historyItems.forEach(line => {
+            const li = document.createElement("li");
+            li.textContent = line;
+            list.appendChild(li);
+          });
+        }
+      } catch (error) {
+        list.innerHTML = "<li>Hiba történt az előzmények betöltésekor.</li>";
+        console.error(error);
+      }
     }
+
+    // 🔹 Első betöltés
     loadInventory();
-    loadHistory();
-}
-
-// 🔹 Leltár betöltése
-function loadInventory(){
-    const selectedLocation = document.getElementById('locationSelect').value;
-    const inventoryList = document.getElementById('inventoryList');
-    inventoryList.innerHTML='';
-
-    db.collection('inventory')
-      .where('location','==',selectedLocation)
-      .orderBy('name')
-      .get()
-      .then(snapshot=>{
-        snapshot.forEach(doc=>{
-            const data = doc.data();
-            const li = document.createElement('li');
-            li.innerHTML = `${data.name} - ${data.qty} 
-                <button onclick="changeQty('${doc.id}', true)">+</button>
-                <button onclick="changeQty('${doc.id}', false)">-</button>`;
-            inventoryList.appendChild(li);
-        });
-      });
-}
-
-// 🔹 Előzmények betöltése (utolsó 24 óra)
-function loadHistory(){
-    const since = new Date(Date.now()-24*60*60*1000);
-    db.collection('history')
-      .where('timestamp','>=',since)
-      .orderBy('timestamp','desc')
-      .onSnapshot(snap=>{
-        const tbody = document.querySelector("#historyTable tbody");
-        tbody.innerHTML='';
-        snap.forEach(doc=>{
-            const d = doc.data();
-            const tr = document.createElement('tr');
-            tr.innerHTML=`<td>${d.timestamp.toDate().toLocaleString()}</td>
-            <td>${d.user}</td><td>${d.product}</td><td>${d.counter}</td><td>${d.change}</td>`;
-            tbody.appendChild(tr);
-        });
-      });
-}
-
-// 🔹 Mennyiség változtatása felugró ablakban
-function changeQty(docId,isAdd){
-    const selectedLocation = document.getElementById('locationSelect').value;
-    const val = prompt(`Mennyit ${isAdd?'hozzáad':'levon'}?`);
-    const num = parseInt(val);
-    if(isNaN(num)) return;
-
-    const docRef = db.collection('inventory').doc(docId);
-    docRef.get().then(doc=>{
-        if(!doc.exists) return;
-        const newQty = doc.data().qty + (isAdd?num:-num);
-        docRef.update({qty:newQty});
-
-        db.collection('history').add({
-            product: doc.data().name,
-            change: isAdd?num:-num,
-            user: auth.currentUser.email,
-            counter: selectedLocation,
-            timestamp: firebase.firestore.Timestamp.fromDate(new Date())
-        }).then(()=>loadHistory());
-    });
-}
-</script>
+  </script>
 </body>
 </html>
