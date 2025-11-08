@@ -91,72 +91,90 @@
       font-size: 14px;
       padding: 6px 10px;
     }
-    @media screen and (max-width: 600px) {
+    @media screen and (max-width: 768px) {
   body {
-    padding: 5px;
-    font-size: 18px; /* alapértelmezett olvasható méret */
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    font-size: 20px; /* alap szövegméret nagyobb */
+    background: #f2f2f2;
   }
 
-  header h1 {
-    font-size: 24px;
+  header {
+    padding: 20px;
+    background-color: #1976d2;
+    color: white;
     text-align: center;
-    margin-bottom: 10px;
+    font-size: 24px;
+    font-weight: bold;
   }
 
   main {
-    padding: 8px;
+    padding: 10px;
   }
 
   select {
     width: 100%;
+    font-size: 22px;
+    padding: 14px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+  }
+
+  .tab-buttons {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+  }
+
+  .tab-buttons button {
+    flex: 1;
     font-size: 20px;
-    padding: 10px;
-    margin-bottom: 15px;
+    padding: 14px 0;
+    margin: 0 5px;
+    border-radius: 8px;
+    background: #e0e0e0;
+    color: black;
+    cursor: pointer;
+  }
+
+  .tab-buttons button.active {
+    background: #1976d2;
+    color: white;
   }
 
   ul li {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 22px; /* nagy, olvasható */
-    padding: 16px 12px;
-    margin: 8px 0;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    flex-wrap: nowrap; /* termék név és gombok egy sorban */
+    padding: 20px 16px;
+    margin: 10px 0;
+    font-size: 24px; /* nagyon nagy szöveg */
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
   }
 
   .buttons {
     display: flex;
-    gap: 8px; /* kicsi távolság a gombok között */
+    gap: 10px;
   }
 
   .buttons button {
-    padding: 12px 18px; /* nagy érintőfelület */
-    font-size: 22px;
-    flex: none;
-    border-radius: 6px;
+    padding: 16px 24px; /* hatalmas érintőfelület */
+    font-size: 26px;
+    border-radius: 10px;
+    border: none;
+    color: white;
     cursor: pointer;
   }
 
-  .tab-buttons {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 15px;
-    flex-wrap: nowrap;
-  }
-
-  .tab-buttons button {
-    flex: 1;
-    font-size: 18px;
-    margin: 0 4px;
-    padding: 12px 0;
-    border-radius: 6px;
-  }
+  .buttons .add { background-color: #43a047; }
+  .buttons .remove { background-color: #e53935; }
 
   #inventoryList, #historyList {
-    max-height: 100vh; /* teljes képernyő magasság */
-    overflow-y: auto;   /* görgethető, ha sok elem van */
+    max-height: 80vh; /* a teljes képernyő nagy részét használja */
+    overflow-y: auto;
   }
 }
   </style>
