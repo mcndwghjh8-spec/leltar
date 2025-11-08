@@ -122,7 +122,37 @@
     // Firebase inicializálása
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const auth = firebase.auth();
     const inventoryRef = db.collection("leltar");
+    const allowedEmails = [
+    "dohnyaalex@gmail.com",
+    "user2@example.com",
+    "user3@example.com"
+];
+    // 🔹 Bejelentkezés
+function login(){
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    if(!allowedEmails.includes(email)){
+        document.getElementById("authMsg").innerText="Ez az e-mail cím nincs engedélyezve.";
+        return;
+    }
+    auth.signInWithEmailAndPassword(email,password).catch(e=>{
+        document.getElementById("authMsg").innerText=e.message;
+    });
+}
+
+// 🔹 Auth state
+auth.onAuthStateChanged(user=>{
+    if(user){
+        document.getElementById("authSection").style.display="none";
+        document.getElementById("inventorySection").style.display="block";
+        initInventory();
+    }else{
+        document.getElementById("authSection").style.display="block";
+        document.getElementById("inventorySection").style.display="none";
+    }
+});
 
     // 🔹 Fül váltás
     function showTab(tab) {
