@@ -91,62 +91,72 @@
       font-size: 14px;
       padding: 6px 10px;
     }
-    
-  @media screen and (max-width: 600px) {
+    @media screen and (max-width: 600px) {
   body {
     padding: 5px;
+    font-size: 18px; /* alapértelmezett olvasható méret */
   }
 
   header h1 {
-    font-size: 22px;
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 10px;
   }
 
   main {
-    padding: 10px;
+    padding: 8px;
   }
 
   select {
     width: 100%;
-    font-size: 18px;
+    font-size: 20px;
+    padding: 10px;
     margin-bottom: 15px;
   }
 
   ul li {
-    flex-direction: row; /* termék neve és gombok egy sorban */
+    display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 18px; /* nagyobb szöveg */
-    padding: 12px 10px;
-    margin: 6px 0;
+    font-size: 22px; /* nagy, olvasható */
+    padding: 16px 12px;
+    margin: 8px 0;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    flex-wrap: nowrap; /* termék név és gombok egy sorban */
   }
 
   .buttons {
     display: flex;
-    gap: 5px; /* kisebb távolság a gombok között */
+    gap: 8px; /* kicsi távolság a gombok között */
   }
 
   .buttons button {
-    padding: 8px 12px; /* nagyobb gomb */
-    font-size: 18px;
-    flex: none; /* ne nyúljon túl a sorban */
+    padding: 12px 18px; /* nagy érintőfelület */
+    font-size: 22px;
+    flex: none;
+    border-radius: 6px;
+    cursor: pointer;
   }
 
   .tab-buttons {
-    flex-direction: row;
+    display: flex;
     justify-content: space-around;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    flex-wrap: nowrap;
   }
 
   .tab-buttons button {
     flex: 1;
-    font-size: 16px;
-    margin: 0 3px;
-    padding: 10px 0;
+    font-size: 18px;
+    margin: 0 4px;
+    padding: 12px 0;
+    border-radius: 6px;
   }
 
   #inventoryList, #historyList {
-    max-height: none; /* a teljes magasságot használja */
-    overflow-y: visible;
+    max-height: 100vh; /* teljes képernyő magasság */
+    overflow-y: auto;   /* görgethető, ha sok elem van */
   }
 }
   </style>
