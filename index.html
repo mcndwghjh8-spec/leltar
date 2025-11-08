@@ -7,6 +7,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
   <style>
     body {
@@ -26,11 +27,24 @@
       max-width: 800px;
       margin: 0 auto;
     }
-    select {
+    input, select {
       font-size: 16px;
       padding: 5px;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
+      width: 100%;
+      box-sizing: border-box;
     }
+    button {
+      padding: 8px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      margin-top: 5px;
+    }
+    .login-btn { background: #1976d2; color: white; }
+    .logout-btn { background: #e53935; color: white; margin-bottom: 20px; }
+
     ul {
       list-style-type: none;
       padding: 0;
@@ -83,32 +97,43 @@
   <header>
     <h1>Leltárkezelő Rendszer</h1>
   </header>
+
   <main>
-    <!-- Tab váltás: Leltár / Előzmények -->
-    <div class="tab-buttons">
-      <button id="inventoryTab" class="active" onclick="showTab('inventory')">📦 Leltár</button>
-      <button id="historyTab" onclick="showTab('history')">🕒 Előzmények</button>
+    <!-- Bejelentkezés -->
+    <div id="authSection">
+      <h3>Bejelentkezés</h3>
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Jelszó">
+      <button class="login-btn" onclick="login()">Bejelentkezés</button>
     </div>
 
-    <!-- Leltár fül -->
-    <div id="inventoryDiv">
-      <label for="locationSelect">Válassz pultot:</label>
-      <select id="locationSelect" onchange="loadInventory()">
-        <option value="Emelet">Emelet</option>
-        <option value="1.pult">1.pult</option>
-      </select>
-      <ul id="inventoryList"></ul>
-    </div>
+    <!-- Leltár és előzmények -->
+    <div id="inventorySection" style="display:none;">
+      <button class="logout-btn" onclick="logout()">Kijelentkezés</button>
 
-    <!-- Előzmények fül -->
-    <div id="historyDiv" style="display:none;">
-      <h3>Előzmények (utolsó 24 óra)</h3>
-      <ul id="historyList"></ul>
+      <div class="tab-buttons">
+        <button id="inventoryTab" class="active" onclick="showTab('inventory')">📦 Leltár</button>
+        <button id="historyTab" onclick="showTab('history')">🕒 Előzmények</button>
+      </div>
+
+      <div id="inventoryDiv">
+        <label for="locationSelect">Válassz pultot:</label>
+        <select id="locationSelect" onchange="loadInventory()">
+          <option value="Emelet">Emelet</option>
+          <option value="1.pult">1.pult</option>
+        </select>
+        <ul id="inventoryList"></ul>
+      </div>
+
+      <div id="historyDiv" style="display:none;">
+        <h3>Előzmények (utolsó 24 óra)</h3>
+        <ul id="historyList"></ul>
+      </div>
     </div>
   </main>
 
   <script>
-    // 🔥 Firebase konfiguráció — IDE MÁSOLD A SAJÁTODAT
+    // 🔥 Firebase konfiguráció
     const firebaseConfig = {
       apiKey: "AIzaSyDaDtikwgOeEx1YKjbaW7p-TS531gPysbo",
       authDomain: "madach-49324.firebaseapp.com",
@@ -118,24 +143,51 @@
       appId: "1:1078568548865:web:863cbf2dffc162a75b5e00"
     };
 
-    // Firebase inicializálása
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
     const inventoryRef = db.collection("leltar");
-  
 
-// 🔹 Auth state
-auth.onAuthStateChanged(user=>{
-    if(user){
-        document.getElementById("authSection").style.display="none";
-        document.getElementById("inventorySection").style.display="block";
-        initInventory();
-    }else{
-        document.getElementById("authSection").style.display="block";
-        document.getElementById("inventorySection").style.display="none";
+    // Engedélyezett email-ek
+    const allowedEmails = [
+      "email1@domain.com",
+      "email2@domain.com",
+      "email3@domain.com"
+    ];
+
+    // 🔹 Bejelentkezés
+    async function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        if (!allowedEmails.includes(userCredential.user.email)) {
+          alert("Ez az email nincs engedélyezve!");
+          auth.signOut();
+          return;
+        }
+      } catch (error) {
+        alert("Hiba a bejelentkezéskor: " + error.message);
+      }
     }
-});
+
+    // 🔹 Kijelentkezés
+    function logout() {
+      auth.signOut();
+    }
+
+    // 🔹 Auth state
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById("authSection").style.display = "none";
+        document.getElementById("inventorySection").style.display = "block";
+        initInventory(user.email);
+      } else {
+        document.getElementById("authSection").style.display = "block";
+        document.getElementById("inventorySection").style.display = "none";
+      }
+    });
 
     // 🔹 Fül váltás
     function showTab(tab) {
@@ -190,7 +242,7 @@ auth.onAuthStateChanged(user=>{
       if (isNaN(qty) || qty <= 0) return alert("Érvénytelen mennyiség!");
 
       const delta = add ? qty : -qty;
-      const user = "Ismeretlen"; // később ide jöhet majd bejelentkezett user
+      const user = auth.currentUser ? auth.currentUser.email : "Ismeretlen";
       const timestamp = Date.now();
 
       try {
@@ -251,8 +303,10 @@ auth.onAuthStateChanged(user=>{
       }
     }
 
-    // 🔹 Első betöltés
-    loadInventory();
+    // 🔹 Inicializálás
+    function initInventory(userEmail) {
+      loadInventory();
+    }
   </script>
 </body>
 </html>
