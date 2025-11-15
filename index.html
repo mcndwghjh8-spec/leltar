@@ -316,7 +316,7 @@
       list.innerHTML = "<li>Töltés...</li>";
 
       try {
-        const snapshot = await inventoryRef.where("location", "==", location).get();
+        const snapshot = await inventoryRef.where("location", "==", location) .orderBy("order").get();
         list.innerHTML = "";
 
         if (snapshot.empty) {
