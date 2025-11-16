@@ -360,7 +360,7 @@
       header.style.background = "#ddd";
       header.style.marginTop = "10px";
       header.style.borderRadius = "6px";
-      header.innerHTML = 📁 <b>${categoryNames[cat]}</b>;
+      header.innerHTML = '📁 <b>${categoryNames[cat]}</b>';
       
       const ul = document.createElement("ul");
       ul.style.display = "none";
@@ -370,7 +370,7 @@
       };
 
       list.appendChild(header);
-      / Termékek
+      // Termékek
       categories[cat].forEach(item => {
         const li = document.createElement("li");
         
